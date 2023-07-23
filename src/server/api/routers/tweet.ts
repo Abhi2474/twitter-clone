@@ -1,25 +1,82 @@
+import { Prisma } from "@prisma/client";
+import { inferAsyncReturnType } from "@trpc/server";
 import { z } from "zod";
 import {
+  createTRPCContext,
   createTRPCRouter,
   protectedProcedure,
   publicProcedure,
 } from "~/server/api/trpc";
 
 export const tweetRouter = createTRPCRouter({
+
+  // publicProcedure : To show the query or mutation output it doesn't require any authentication.
   infiniteFeed: publicProcedure
     .input(
       z.object({
         limit: z.number().optional(),
+        onlyFollowing: z.boolean().optional(),
+        // cursor is important to use the infinitefeed or infiniteposts
         cursor: z.object({ id: z.string(), createdAt: z.date() }).optional(),
       })
     )
-    .query(async ({ input: { limit = 10, cursor }, ctx }) => {
+
+    // query is same as GET request
+    .query(async ({ input: { limit = 10, onlyFollowing=false,  cursor }, ctx }) => {
       const currentUserId = ctx.session?.user.id
+      return await getInfiniteTweets({ctx, cursor, limit, whereClause: currentUserId == null || !onlyFollowing ? undefined : {
+        user:{
+          followers: { some: { id: currentUserId}}
+        }
+      }})
+    }),
+
+
+  // protectedProcedure : To show the query or mutation output it requires an authentication.
+  create: protectedProcedure
+    .input(z.object({ content: z.string() }))
+    .mutation(async ({ input: { content }, ctx }) => {
+      return await ctx.prisma.tweet.create({
+        data: { content, userId: ctx.session.user.id },
+      });
+    }),
+    toggleLike: protectedProcedure.input(z.object({id:z.string()}))
+
+    // mutation is use to manage these PUT, POST or DELETE methods. 
+    .mutation(async ({input: { id }, ctx})=>{
+      const data = { tweetId:id, userId: ctx.session.user.id}
+
+      const existingLike = await ctx.prisma.like.findUnique({ where: { userId_tweetId: data}, })
+
+      if(existingLike == null ){
+        await ctx.prisma.like.create({data})
+        return { addedLike: true}
+      } else{
+        await ctx.prisma.like.delete({where: { userId_tweetId: data}})
+        return { addedLike: false}
+      }
+    })
+});
+
+
+async function getInfiniteTweets({
+  whereClause,
+  ctx, 
+  limit,
+  cursor
+}:{
+  whereClause?: Prisma.TweetWhereInput
+  limit: number
+  cursor: { id: string, createdAt: Date} | undefined
+  ctx: inferAsyncReturnType<typeof createTRPCContext>
+}){
+  const currentUserId = ctx.session?.user.id
 
       const data = await ctx.prisma.tweet.findMany({
         take: limit + 1,
         cursor: cursor ? { createdAt_id: cursor } : undefined,
         orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+        where: whereClause,
         select:{
           id: true,
           content: true,
@@ -50,12 +107,4 @@ export const tweetRouter = createTRPCRouter({
           likedByMe: tweet.likes?.length > 0
         }
       }), nextCursor }
-    }),
-  create: protectedProcedure
-    .input(z.object({ content: z.string() }))
-    .mutation(async ({ input: { content }, ctx }) => {
-      return await ctx.prisma.tweet.create({
-        data: { content, userId: ctx.session.user.id },
-      });
-    }),
-});
+}
