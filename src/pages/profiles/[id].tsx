@@ -10,6 +10,7 @@ import { VscArrowLeft } from "react-icons/vsc";
 import ProfileImage from "~/components/ProfileImage";
 import { InfiniteTweetList } from "~/components";
 import Button from "~/components/Button";
+import Head from "next/head";
 
 const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   id, 
@@ -36,13 +37,13 @@ const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
     }
   })
 
-  if(profile == null || profile.name == null)return <ErrorPage statusCode={404} />
+  if(profile?.name == null)return <ErrorPage statusCode={404} />
 
   return (
     <>
-      <head>
+      <Head>
         <title>{`Twitter Clone - ${profile.name} `}</title>
-      </head>
+      </Head>
       <header className="sticky top-0 z-10 flex items-center border-b bg-white px-4 py-2">
         <Link href={'..'} className="mr-2">
           <IconHoverEffect>
@@ -59,7 +60,7 @@ const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
             {getPlural(profile.followersCount, 'Follower', 'Followers')} {' '}
             {profile.followsCount} Following
           </div>
-          <FollowButton isFollowing={profile.isFollowing} userId={id} onClick={()=> null} />
+          <FollowButton isLoading={toggleFollow.isLoading} isFollowing={profile.isFollowing} userId={id} onClick={()=> toggleFollow.mutate({userId:id})} />
         </div>
       </header>
           <main>
@@ -74,7 +75,7 @@ const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   )
 }
 
-function FollowButton({isFollowing, onClick, userId}:{userId: string, isFollowing: boolean, onClick:()=>void}){
+function FollowButton({isFollowing, onClick, userId,isLoading}:{userId: string, isFollowing: boolean, onClick:()=>void, isLoading: boolean}){
 
   const session =  useSession()
 
@@ -82,7 +83,7 @@ function FollowButton({isFollowing, onClick, userId}:{userId: string, isFollowin
       return null 
   }
 
-  return <Button onClick={onClick} small gray={isFollowing}>
+  return <Button disabled={isLoading} onClick={onClick} small gray={isFollowing}>
     { isFollowing ? 'Unfollow'  : 'Follow'}
   </Button>
 }
@@ -112,7 +113,7 @@ export async function getStaticProps(context: GetStaticPropsContext<{id:string}>
   }
 
   const ssg = ssgHelper()
-  await ssg.profile.getById.prefetch
+  await ssg.profile.getById.prefetch({ id })
 
   return {
     props: {

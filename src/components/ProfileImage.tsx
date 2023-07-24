@@ -2,10 +2,10 @@ import Image from "next/image";
 import React from "react";
 import { VscAccount } from "react-icons/vsc";
 
-type ProfileImageProps = {
+interface ProfileImageProps {
   src?: string | null;
   className?: string;
-};
+}
 
 const ProfileImage = ({ src, className = "" }: ProfileImageProps) => {
   return (

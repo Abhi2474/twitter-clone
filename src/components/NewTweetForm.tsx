@@ -1,7 +1,7 @@
-import React, { FormEvent, useCallback, useLayoutEffect, useRef, useState } from "react";
+import React, { type FormEvent, useCallback, useLayoutEffect, useRef, useState } from "react";
 import Button from "./Button";
 import ProfileImage from "./ProfileImage";
-import { UseSessionOptions, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { api } from "~/utils/api";
 
 // function to increase the text area when hit the enter or increases the word limit
@@ -48,7 +48,7 @@ function Form() {
     if(session.status !== 'authenticated') return
 
     trpcUtils.tweet.infiniteFeed.setInfiniteData({}, (oldData)=>{
-      if(oldData == null || oldData.pages[0] == null ) return 
+      if(oldData?.pages[0] == null ) return 
 
       const newCacheTweet = {
         ...newTweet,
@@ -56,8 +56,8 @@ function Form() {
         likedByMe: false, 
         user: {
           id: session.data.user.id,
-          name: session.data.user.name || null,
-          image: session.data.user.image || null
+          name: session.data.user.name ??  null,
+          image: session.data.user.image ?? null
         }
       }
        return {

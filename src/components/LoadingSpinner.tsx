@@ -1,7 +1,7 @@
 import React from 'react'
 import { VscRefresh } from 'react-icons/vsc'
 
-type LoadingSpinnerProps = {
+interface LoadingSpinnerProps {
 	big?: boolean
 }
 

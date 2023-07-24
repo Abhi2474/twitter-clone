@@ -8,22 +8,22 @@ import { IconHoverEffect } from "./IconHoverEffect";
 import { api } from "~/utils/api";
 import LoadingSpinner from "./LoadingSpinner";
 
-type Tweet = {
+interface Tweet {
   id: string;
   content: string;
   createdAt: Date;
   likeCount: number;
   likedByMe: boolean;
   user: { id: string; image: string | null; name: string | null };
-};
+}
 
-type InfiniteTweetListProps = {
+interface InfiniteTweetListProps {
   isLoading: boolean;
   isError: boolean;
   hasMore: boolean | undefined;
   fetchNewTweets: () => Promise<unknown>;
   tweets?: Tweet[];
-};
+}
 
 export const InfiniteTweetList = ({
   tweets,
@@ -138,12 +138,12 @@ function TweetCard({
   );
 }
 
-type HeartButtonProps = {
+interface HeartButtonProps {
   likedByMe: boolean;
   likeCount: number;
   isLoading: boolean;
   onClick: () => void;
-};
+}
 
 function HeartButton({
   likedByMe,
