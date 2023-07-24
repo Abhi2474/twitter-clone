@@ -23,7 +23,7 @@ const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
   const trcpUtils = api.useContext()
   const toggleFollow = api.profile.toggleFollow.useMutation({
     onSuccess:({addedFollow})=>{
-      trcpUtils.profile.getById.setData({id}, (oldData) =>{
+      trcpUtils.profile.getById.setData({id}, (oldData: any) =>{
         if(oldData == null) return
 
         const countModifier = addedFollow ? 1: -1
