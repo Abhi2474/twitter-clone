@@ -10,6 +10,21 @@ import {
 
 export const tweetRouter = createTRPCRouter({
 
+  infiniteProfileFeed: publicProcedure
+  .input(z.object({
+    userId: z.string(),
+    limit: z.number().optional(),
+    cursor: z.object({ id: z.string(), createdAt: z.date()}).optional()
+  }))
+  .query( async ({input: { limit=10, userId, cursor}, ctx})=>{
+    return await getInfiniteTweets({
+      limit,
+      ctx, 
+      cursor, 
+      whereClause: { userId }
+    })
+  }),
+
   // publicProcedure : To show the query or mutation output it doesn't require any authentication.
   infiniteFeed: publicProcedure
     .input(
