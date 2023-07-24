@@ -20,6 +20,22 @@ const ProfilePage:NextPage<InferGetStaticPropsType<typeof getStaticProps>> = ({
     { getNextPageParam: (lastPage)=> lastPage.nextCursor}
     )
 
+  const trcpUtils = api.useContext()
+  const toggleFollow = api.profile.toggleFollow.useMutation({
+    onSuccess:({addedFollow})=>{
+      trcpUtils.profile.getById.setData({id}, (oldData) =>{
+        if(oldData == null) return
+
+        const countModifier = addedFollow ? 1: -1
+        return{
+          ...oldData,
+          isFollowing: addedFollow,
+          followersCount: oldData.followersCount + countModifier
+        }
+      })
+    }
+  })
+
   if(profile == null || profile.name == null)return <ErrorPage statusCode={404} />
 
   return (
